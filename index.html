@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><title>Eco Job Board Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap">
+<style id="css">
+/* ======== ECO MULTIPLIER BOARD — 2097 command deck (committed dark) ======== */
+:root{
+  --bg:#04070d; --surface:rgba(13,20,33,.86); --surface2:rgba(24,34,52,.85);
+  --ink:#dbe7ff; --muted:#7e90ab; --line:rgba(96,200,255,.15); --line2:rgba(96,200,255,.32);
+  --accent:#4fd8ff; --accent2:#7c5cff; --accent-ink:#03121c;
+  --green:#2ca873; --green-glow:#34f5a6; --green-bg:rgba(35,180,120,.16); --green-ink:#6fe3ae;
+  --amber:#b3900f; --amber-glow:#ffd166; --amber-bg:rgba(200,160,30,.16);  --amber-ink:#e6c355;
+  --red:#d64560;   --red-glow:#ff6b8b;   --red-bg:rgba(230,70,110,.16);    --red-ink:#ff92a8;
+  --glass:blur(14px) saturate(140%);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#04070d;
+  background-image:
+    radial-gradient(1100px 480px at 85% -10%, rgba(124,92,255,.16), transparent 60%),
+    radial-gradient(900px 420px at -10% 8%, rgba(79,216,255,.13), transparent 55%),
+    linear-gradient(rgba(96,200,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,200,255,.045) 1px, transparent 1px);
+  background-size:auto,auto,44px 44px,44px 44px;
+  background-attachment:fixed;
+  color:var(--ink);
+  font:400 15px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+#app{max-width:1180px;margin:0 auto;padding:22px 18px 130px}
+h1,h2,h3{margin:0;font-family:Rajdhani,Barlow,sans-serif;text-wrap:balance}
+button{font:inherit;cursor:pointer}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---- HUD panel chrome: glass + corner brackets ---- */
+.kpi,.panel,.tablewrap,.repcard{
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass); backdrop-filter:var(--glass);
+  border:1px solid var(--line); border-radius:12px; position:relative;
+  box-shadow:0 0 0 1px rgba(2,8,18,.5), 0 14px 40px rgba(1,6,14,.5);
+}
+.kpi::before,.panel::before,.tablewrap::before{
+  content:""; position:absolute; inset:0; border-radius:12px; pointer-events:none;
+  background:
+    linear-gradient(var(--line2),var(--line2)) top left/14px 1.5px,
+    linear-gradient(var(--line2),var(--line2)) top left/1.5px 14px,
+    linear-gradient(var(--line2),var(--line2)) bottom right/14px 1.5px,
+    linear-gradient(var(--line2),var(--line2)) bottom right/1.5px 14px;
+  background-repeat:no-repeat;
+}
+
+/* header */
+.hdr{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.hdr h1{
+  font-size:31px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  background:linear-gradient(92deg,#eaf6ff 10%,var(--accent) 55%,var(--accent2) 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hdr .brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:38px;height:38px;border-radius:9px;display:grid;place-items:center;
+  font-family:Rajdhani;font-weight:700;font-size:20px;color:var(--accent-ink);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 0 18px rgba(79,216,255,.5), 0 0 44px rgba(124,92,255,.28);
+}
+.sync{
+  margin-left:auto;display:flex;align-items:center;gap:9px;padding:7px 14px;border-radius:999px;
+  font-family:Rajdhani;font-weight:600;font-size:13.5px;letter-spacing:1.2px;text-transform:uppercase;
+  border:1px solid var(--line);background:var(--surface);
+  -webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);
+}
+.sync .dot{width:9px;height:9px;border-radius:50%;position:relative}
+.sync .dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid currentColor;opacity:.55;animation:ping 2.2s ease-out infinite}
+@keyframes ping{0%{transform:scale(.5);opacity:.7}80%{transform:scale(1.5);opacity:0}100%{opacity:0}}
+.sync.ok .dot{background:var(--green-glow);color:var(--green-glow);box-shadow:0 0 10px var(--green-glow)} .sync.ok{color:var(--green-ink)}
+.sync.warn .dot{background:var(--amber-glow);color:var(--amber-glow);box-shadow:0 0 10px var(--amber-glow)} .sync.warn{color:var(--amber-ink)}
+.sync.stale .dot{background:var(--red-glow);color:var(--red-glow);box-shadow:0 0 10px var(--red-glow)} .sync.stale{color:var(--red-ink)}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:11px;margin-bottom:20px}
+.kpi{padding:14px 16px}
+.kpi .lbl{font-family:Rajdhani;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-family:Rajdhani;font-weight:700;font-size:33px;line-height:1.12;margin-top:3px;text-shadow:0 0 22px rgba(79,216,255,.25)}
+.kpi .sub{font-size:12.5px;color:var(--muted);margin-top:1px}
+.kpi.gx .val{color:var(--green-ink);text-shadow:0 0 20px rgba(52,245,166,.35)}
+.kpi.yx .val{color:var(--amber-ink);text-shadow:0 0 20px rgba(255,209,102,.3)}
+.kpi.rx .val{color:var(--red-ink);text-shadow:0 0 20px rgba(255,107,139,.35)}
+.dots{display:flex;gap:13px;margin-top:9px}
+.dots span{display:flex;align-items:center;gap:6px;font-family:Rajdhani;font-weight:700;font-size:18px}
+.dots i{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+/* tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tab{
+  background:none;border:none;color:var(--muted);padding:9px 16px 12px;
+  font-family:Rajdhani;font-weight:600;font-size:16px;letter-spacing:1.6px;text-transform:uppercase;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent);text-shadow:0 0 16px rgba(79,216,255,.5)}
+.tab .cnt{font-size:12px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:1px 8px;margin-left:6px;color:var(--muted)}
+
+/* panels */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+@media (max-width:760px){.duo{grid-template-columns:1fr}}
+.panel{padding:15px 17px}
+.panel h3{font-size:17px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;display:flex;gap:8px;align-items:center}
+.panel h3 .note{font:500 11.5px Barlow;color:var(--muted);text-transform:none;letter-spacing:0}
+.mini{width:100%;border-collapse:collapse;margin-top:8px}
+.mini td{padding:7px 4px;border-top:1px solid var(--line);font-size:14px}
+.mini tr:first-child td{border-top:none}
+.mini .jn{font-weight:600;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini .rep{color:var(--muted);font-size:12.5px}
+.mini .r{text-align:right}
+
+/* chips */
+.chip{
+  display:inline-flex;align-items:center;gap:5px;font-family:Rajdhani;font-weight:700;font-size:14.5px;
+  border-radius:6px;padding:2px 9px;font-variant-numeric:tabular-nums;white-space:nowrap;border:1px solid;
+}
+.chip.g{background:var(--green-bg);color:var(--green-ink);border-color:rgba(52,245,166,.35);box-shadow:0 0 10px rgba(52,245,166,.18)}
+.chip.y{background:var(--amber-bg);color:var(--amber-ink);border-color:rgba(255,209,102,.3);box-shadow:0 0 10px rgba(255,209,102,.13)}
+.chip.r{background:var(--red-bg);color:var(--red-ink);border-color:rgba(255,107,139,.35);box-shadow:0 0 10px rgba(255,107,139,.18)}
+.chip.n{background:var(--surface2);color:var(--muted);border-color:var(--line)}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table.jobs{width:100%;border-collapse:collapse;min-width:640px}
+.jobs th{
+  font-family:Rajdhani;font-size:12px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);
+  text-align:right;padding:12px;border-bottom:1px solid var(--line2);white-space:nowrap;
+}
+.jobs th:first-child,.jobs td:first-child{text-align:left;padding-left:16px}
+.jobs th.mid,.jobs td.mid{text-align:center}
+.jobs td{padding:9.5px 12px;border-bottom:1px solid var(--line);text-align:right;font-size:14.5px}
+.jobs tr:last-child td{border-bottom:none}
+.jobs tbody tr:not(.total):hover td{background:rgba(79,216,255,.06)}
+.jobs .jn{font-weight:600}
+.jobs .rep{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.jobs .profit-neg{color:var(--red-ink);font-weight:600;text-shadow:0 0 12px rgba(255,107,139,.3)}
+.jobs tr.total td{
+  border-top:1.5px solid var(--line2);border-bottom:none;background:rgba(79,216,255,.07);
+  font-family:Rajdhani;font-weight:700;font-size:16.5px;letter-spacing:.8px;
+}
+.rank{color:var(--accent);font-family:Rajdhani;font-weight:700;width:30px;display:inline-block;opacity:.85}
+.repsec{display:flex;align-items:center;gap:10px;margin:26px 2px 10px}
+.repsec .avatar{width:30px;height:30px;font-size:14px}
+.repsec h2{font-size:22px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.repsec .meta{font:500 13px Barlow;color:var(--muted)}
+.secnote{font-family:Rajdhani;font-weight:600;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin:20px 2px 8px;opacity:.9}
+.act{
+  border:1px solid var(--line2);background:transparent;color:var(--muted);border-radius:7px;
+  padding:4px 11px;font-family:Rajdhani;font-weight:600;font-size:13px;letter-spacing:.8px;transition:all .15s;
+}
+.act:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px rgba(79,216,255,.3)}
+.act.confirm{background:var(--red);border-color:var(--red-glow);color:#fff;box-shadow:0 0 14px rgba(255,107,139,.5)}
+.act.reopen:hover{border-color:var(--green-glow);color:var(--green-ink);box-shadow:0 0 12px rgba(52,245,166,.3)}
+.writable{display:none}
+.can-write .writable{display:inline-block}
+.avatar{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-family:Rajdhani;font-weight:700;font-size:16px;color:var(--accent-ink);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 0 12px rgba(79,216,255,.4);
+}
+
+/* empty state */
+.empty{padding:46px 20px;text-align:center;color:var(--muted)}
+.empty .big{font-family:Rajdhani;font-size:24px;font-weight:600;letter-spacing:1.5px;color:var(--ink);margin-bottom:6px}
+
+/* ask-claude drawer */
+.fab{
+  position:fixed;right:22px;bottom:22px;z-index:40;display:flex;align-items:center;gap:9px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-ink);
+  border:none;border-radius:999px;padding:13px 21px;font-family:Rajdhani;font-weight:700;font-size:16px;
+  letter-spacing:1px;box-shadow:0 0 24px rgba(79,216,255,.45),0 8px 28px rgba(1,6,14,.6);
+}
+.fab .badge{background:var(--red);color:#fff;border-radius:999px;font-size:11.5px;padding:1px 7px;box-shadow:0 0 10px var(--red-glow)}
+.drawer{
+  position:fixed;right:0;top:0;bottom:0;width:min(430px,100vw);z-index:50;
+  background:rgba(8,13,22,.94);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);
+  border-left:1px solid var(--line2);box-shadow:-12px 0 44px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;transform:translateX(105%);transition:transform .22s ease;
+}
+.drawer.open{transform:none}
+.drawer .dh{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.drawer .dh h3{font-size:20px;letter-spacing:1.6px;text-transform:uppercase}
+.drawer .dh .sub{font-size:12px;color:var(--muted)}
+.drawer .close{margin-left:auto;background:none;border:none;font-size:22px;color:var(--muted);line-height:1}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;border-radius:12px;padding:9px 13px;font-size:14px}
+.msg.q{align-self:flex-end;background:linear-gradient(135deg,rgba(79,216,255,.9),rgba(124,92,255,.9));color:var(--accent-ink);border-bottom-right-radius:4px}
+.msg.q .who{font-size:11px;opacity:.85;font-weight:600}
+.msg.a{align-self:flex-start;background:var(--surface2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.a .who{font-size:11px;color:var(--accent);font-weight:600}
+.msg .pend{font-size:11.5px;opacity:.75;font-style:italic}
+.composer{border-top:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.composer .row{display:flex;gap:8px}
+.composer select,.composer textarea{font:inherit;background:rgba(16,24,38,.9);color:var(--ink);border:1px solid var(--line2);border-radius:9px;padding:8px 10px}
+.composer textarea{flex:1;resize:none;min-height:58px}
+.composer .send{background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-ink);border:none;border-radius:9px;padding:9px 18px;font-family:Rajdhani;font-weight:700;letter-spacing:.8px}
+.composer .hint{font-size:11.5px;color:var(--muted)}
+.readonly-note{font-size:12.5px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
+
+/* toast */
+#toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:rgba(10,16,26,.95);color:var(--ink);border:1px solid var(--line2);border-radius:10px;
+  padding:10px 18px;font-family:Rajdhani;font-weight:600;letter-spacing:.6px;font-size:15px;
+  box-shadow:0 0 24px rgba(79,216,255,.25);opacity:0;pointer-events:none;transition:all .25s;z-index:80;
+}
+#toast.show{opacity:1;transform:translateX(-50%)}
+
+/* PIN gate (public mirror) */
+#gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:#04070d;background-image:radial-gradient(900px 420px at 50% -10%, rgba(79,216,255,.12), transparent 55%)}
+#gate .box{width:min(360px,88vw);padding:34px 30px;text-align:center;background:var(--surface);border:1px solid var(--line2);border-radius:14px;-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);box-shadow:0 0 40px rgba(79,216,255,.15)}
+#gate h2{font-size:22px;letter-spacing:2.5px;text-transform:uppercase;background:linear-gradient(92deg,#eaf6ff,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+#gate p{color:var(--muted);font-size:13.5px;margin:8px 0 18px}
+#gate input{width:100%;text-align:center;font-family:Rajdhani;font-weight:700;font-size:26px;letter-spacing:10px;background:rgba(16,24,38,.9);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:10px}
+#gate button{margin-top:14px;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-ink);border:none;border-radius:10px;padding:11px;font-family:Rajdhani;font-weight:700;font-size:16px;letter-spacing:1.5px}
+#gate .err{color:var(--red-ink);font-size:13px;min-height:18px;margin-top:10px}
+
+@media (max-width:680px){
+  .jobs .hide-sm{display:none}
+  #app{padding:14px 10px 130px}
+  .hdr h1{font-size:23px;letter-spacing:1.6px}
+  body{background-size:auto,auto,34px 34px,34px 34px}
+}
+</style>
+
+<div id="app" aria-busy="true"></div>
+<div id="toast" role="status"></div>
+
+<script id="state" type="application/json">{"encrypted": "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"}</script>
+<script id="code">
+"use strict";
+/* ============ Eco Multiplier Board — 2097 deck ============
+   Renders entirely from the #state JSON block. Writes (close/reopen job,
+   Ask-Claude requests) regenerate the whole document from state and publish
+   it back via the `artifact` capability - owner/editors only. */
+
+let STATE = JSON.parse(document.getElementById("state").textContent);
+const CODE_TEXT = document.getElementById("code").textContent;
+const CSS_TEXT  = document.getElementById("css").textContent;
+const FONT_LINKS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap">';
+const PEOPLE = ["Refael","Dor","Mike","Alina"];
+const $ = s => document.querySelector(s);
+let TAB = "company", CAN_WRITE = false, ART = null, BUSY = false;
+
+/* ---------- helpers ---------- */
+const money = n => "$" + Math.round(n).toLocaleString("en-US");
+const moneyK = n => Math.abs(n) >= 1e6 ? "$" + (n/1e6).toFixed(2) + "M"
+                : Math.abs(n) >= 1e3 ? "$" + Math.round(n/1e3).toLocaleString() + "K" : money(n);
+function mult(j){ return j.spent > 0 ? j.collected / j.spent : null; }
+function bucket(j){ const m = mult(j); if (m === null) return "new";
+  return m >= 2 ? "g" : m >= 1.7 ? "y" : "r"; }
+function chip(j){ const b = bucket(j);
+  if (b === "new") return '<span class="chip n">NEW</span>';
+  return '<span class="chip ' + b + '">×' + mult(j).toFixed(2) + "</span>"; }
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 3200); }
+
+function syncChip(){
+  const ts = STATE.last_qb_sync ? Date.parse(STATE.last_qb_sync) : NaN;
+  if (isNaN(ts)) return ['warn', "QuickBooks sync not connected"];
+  const hrs = (Date.now() - ts) / 36e5;
+  const when = new Date(ts).toLocaleString("en-US", {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+  if (hrs > 36) return ['stale', "STALE — last sync " + when];
+  return ['ok', "Synced " + when];
+}
+
+/* count-up animation on KPI numbers (skipped for reduced-motion users) */
+function countUp(){
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.querySelectorAll(".kpi .val[data-final]").forEach(el => {
+    const finalText = el.dataset.final, m = finalText.match(/^([^0-9\-]*)(-?[\d.]+)(.*)$/);
+    if (!m) return;
+    const target = parseFloat(m[2]), dec = (m[2].split(".")[1] || "").length;
+    const t0 = performance.now(), DUR = 650;
+    (function tick(t){
+      const p = Math.min((t - t0) / DUR, 1), eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = m[1] + (target * eased).toFixed(dec) + m[3];
+      if (p < 1) requestAnimationFrame(tick); else el.textContent = finalText;
+    })(t0);
+  });
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  const open = STATE.jobs.filter(j => j.status === "open");
+  const closed = STATE.jobs.filter(j => j.status === "closed");
+  const tc = open.reduce((s,j) => s + j.collected, 0);
+  const tsp = open.reduce((s,j) => s + j.spent, 0);
+  const bx = tsp > 0 ? tc/tsp : null;
+  const counts = {g:0, y:0, r:0, new:0};
+  open.forEach(j => counts[bucket(j)]++);
+  const [sc, stxt] = syncChip();
+  const bxCls = bx === null ? "" : bx >= 2 ? "gx" : bx >= 1.7 ? "yx" : "rx";
+
+  let h = '<header class="hdr"><div class="brand"><div class="logo">E</div>' +
+    "<h1>Eco Multiplier Board</h1></div>" +
+    '<div class="sync ' + sc + '"><span class="dot"></span>' + esc(stxt) + "</div></header>";
+
+  h += '<section class="kpis">' +
+    kpi("Collected", moneyK(tc), "open jobs, life-to-date") +
+    kpi("Money spent", moneyK(tsp), "COGS + job expenses") +
+    kpi("Profit", moneyK(tc - tsp), "collected minus spent") +
+    '<div class="kpi ' + bxCls + '"><div class="lbl">Blended multiplier</div><div class="val num" data-final="' +
+      (bx === null ? "—" : "×" + bx.toFixed(2)) + '">' +
+      (bx === null ? "—" : "×" + bx.toFixed(2)) + '</div><div class="sub">target ×2.00</div></div>' +
+    '<div class="kpi"><div class="lbl">Buckets</div><div class="dots">' +
+      '<span><i style="background:var(--green-glow);box-shadow:0 0 9px var(--green-glow)"></i>' + counts.g + "</span>" +
+      '<span><i style="background:var(--amber-glow);box-shadow:0 0 9px var(--amber-glow)"></i>' + counts.y + "</span>" +
+      '<span><i style="background:var(--red-glow);box-shadow:0 0 9px var(--red-glow)"></i>' + counts.r + "</span>" +
+      (counts.new ? '<span><i style="background:var(--muted)"></i>' + counts.new + "</span>" : "") +
+    "</div></div></section>";
+
+  h += '<nav class="tabs" role="tablist">' +
+    tabBtn("company", "Company") +
+    tabBtn("reps", "Sales Reps", new Set(open.map(j => j.rep)).size) +
+    tabBtn("closed", "Closed", closed.length) + "</nav>";
+
+  if (TAB === "company") h += companyTab(open);
+  else if (TAB === "reps") h += repsTab(open);
+  else h += closedTab(closed);
+
+  $("#app").innerHTML = h;
+  $("#app").removeAttribute("aria-busy");
+  document.body.classList.toggle("can-write", CAN_WRITE);
+  wire();
+  countUp();
+}
+function kpi(lbl, val, sub){ return '<div class="kpi"><div class="lbl">' + lbl +
+  '</div><div class="val num" data-final="' + val + '">' + val + '</div><div class="sub">' + sub + "</div></div>"; }
+function tabBtn(id, lbl, cnt){ return '<button class="tab' + (TAB === id ? " on" : "") +
+  '" role="tab" data-tab="' + id + '">' + lbl + (cnt !== undefined ? '<span class="cnt">' + cnt + "</span>" : "") + "</button>"; }
+
+function companyTab(open){
+  const withM = open.filter(j => j.spent >= 10000);
+  const worst = [...withM].sort((a,b) => mult(a) - mult(b)).slice(0,5);
+  const best = [...open].sort((a,b) => (b.collected - b.spent) - (a.collected - a.spent)).slice(0,5);
+  let h = '<div class="duo">';
+  h += '<div class="panel"><h3>🔻 Needs attention <span class="note">lowest ×, spend ≥ $10K</span></h3><table class="mini">' +
+    worst.map(j => '<tr><td class="jn">' + esc(j.job) + '<div class="rep">' + esc(j.rep) + "</div></td><td class='mid'>" + chip(j) +
+      '</td><td class="r num">' + money(j.collected - j.spent) + "</td></tr>").join("") + "</table></div>";
+  h += '<div class="panel"><h3>🏆 Top profit <span class="note">collected minus spent</span></h3><table class="mini">' +
+    best.map(j => '<tr><td class="jn">' + esc(j.job) + '<div class="rep">' + esc(j.rep) + "</div></td><td class='mid'>" + chip(j) +
+      '</td><td class="r num"><b>' + money(j.collected - j.spent) + "</b></td></tr>").join("") + "</table></div></div>";
+  h += jobTable(open, "close", "COMPANY TOTAL");
+  return h;
+}
+
+function totalsRow(list, action, label){
+  const tc = list.reduce((s,j) => s + j.collected, 0);
+  const tg = list.reduce((s,j) => s + j.cogs, 0);
+  const tsp = list.reduce((s,j) => s + j.spent, 0);
+  const p = tc - tsp;
+  return "<tr class='total'><td>" + esc(label) + "</td>" +
+    "<td class='mid'>" + chip({collected: tc, spent: tsp}) + "</td>" +
+    "<td class='num'>" + money(tc) + "</td>" +
+    "<td class='num hide-sm'>" + money(tg) + "</td>" +
+    "<td class='num'>" + money(tsp) + "</td>" +
+    "<td class='num" + (p < 0 ? " profit-neg" : "") + "'>" + money(p) + "</td>" +
+    (action === "reopen" ? "<td class='hide-sm'></td>" : "") + "<td></td></tr>";
+}
+
+function jobTable(list, action, totalLabel){
+  if (!list.length) return '<div class="tablewrap"><div class="empty"><div class="big">No closed jobs yet</div>' +
+    "Close a job from the Company tab and it moves here with its final numbers.</div></div>";
+  const rows = [...list].sort((a,b) => (mult(a) ?? 99) - (mult(b) ?? 99));
+  return '<div class="tablewrap"><table class="jobs"><thead><tr>' +
+    "<th>Job / customer</th><th class='mid'>Multiplier</th><th>Collected</th>" +
+    "<th class='hide-sm'>COGS</th><th>Spent</th><th>Profit</th>" +
+    (action === "reopen" ? "<th class='hide-sm'>Closed on</th>" : "") +
+    "<th></th></tr></thead><tbody>" +
+    rows.map(j => {
+      const p = j.collected - j.spent;
+      return "<tr><td><span class='jn'>" + esc(j.job) + "</span><span class='rep'>" + esc(j.rep) + "</span></td>" +
+      "<td class='mid'>" + chip(j) + "</td>" +
+      "<td class='num'>" + money(j.collected) + "</td>" +
+      "<td class='num hide-sm'>" + money(j.cogs) + "</td>" +
+      "<td class='num'>" + money(j.spent) + "</td>" +
+      "<td class='num" + (p < 0 ? " profit-neg" : "") + "'>" + money(p) + "</td>" +
+      (action === "reopen" ? "<td class='hide-sm'>" + esc(j.closed_on || "") + "</td>" : "") +
+      "<td><button class='act writable" + (action === "reopen" ? " reopen" : "") + "' data-act='" + action +
+        "' data-id='" + esc(j.id) + "'>" + (action === "reopen" ? "Reopen" : "Close job") + "</button></td></tr>";
+    }).join("") + totalsRow(list, action, totalLabel || "TOTAL") + "</tbody></table></div>";
+}
+
+function repsTab(open){
+  const groups = {};
+  open.forEach(j => (groups[j.rep] = groups[j.rep] || []).push(j));
+  const reps = Object.entries(groups).map(([rep, js]) => {
+    const c = js.reduce((s,j) => s + j.collected, 0), sp = js.reduce((s,j) => s + j.spent, 0);
+    return {rep, js, c, sp, p: c - sp, x: sp > 0 ? c/sp : null};
+  }).sort((a,b) => b.p - a.p);
+
+  /* leaderboard: who is best, by total profit, with each rep's blended color */
+  let h = '<div class="secnote">Rep leaderboard — by total profit</div>' +
+    '<div class="tablewrap"><table class="jobs"><thead><tr>' +
+    "<th>Sales rep</th><th class='mid'>Blended ×</th><th>Collected</th>" +
+    "<th>Spent</th><th>Profit</th><th class='hide-sm'>Jobs</th></tr></thead><tbody>" +
+    reps.map((r, i) =>
+      "<tr><td><span class='rank'>" + String(i + 1).padStart(2, "0") + "</span><span class='jn'>" + esc(r.rep) + "</span></td>" +
+      "<td class='mid'>" + chip({collected: r.c, spent: r.sp}) + "</td>" +
+      "<td class='num'>" + money(r.c) + "</td>" +
+      "<td class='num'>" + money(r.sp) + "</td>" +
+      "<td class='num" + (r.p < 0 ? " profit-neg" : "") + "'><b>" + money(r.p) + "</b></td>" +
+      "<td class='num hide-sm'>" + r.js.length + "</td></tr>").join("") +
+    (function(){
+      const tc = open.reduce((s,j) => s + j.collected, 0), tsp = open.reduce((s,j) => s + j.spent, 0);
+      return "<tr class='total'><td>COMPANY TOTAL</td><td class='mid'>" + chip({collected: tc, spent: tsp}) +
+        "</td><td class='num'>" + money(tc) + "</td><td class='num'>" + money(tsp) +
+        "</td><td class='num" + (tc - tsp < 0 ? " profit-neg" : "") + "'><b>" + money(tc - tsp) +
+        "</b></td><td class='num hide-sm'>" + open.length + "</td></tr>";
+    })() +
+    "</tbody></table></div>";
+
+  /* one table per rep, ranked, each closing on its own totals row */
+  h += reps.map(r =>
+    '<div class="repsec"><div class="avatar">' + esc(r.rep[0].toUpperCase()) + "</div>" +
+    "<h2>" + esc(r.rep) + "</h2><span class='meta'>" + r.js.length + " job" + (r.js.length > 1 ? "s" : "") + "</span></div>" +
+    jobTable(r.js, "close", esc(r.rep).toUpperCase() + " TOTAL")
+  ).join("");
+  return h;
+}
+function closedTab(closed){ return jobTable(closed, "reopen", "CLOSED TOTAL"); }
+
+/* ---------- ask-claude drawer ---------- */
+function drawerHTML(){
+  const reqs = STATE.requests || [];
+  const waiting = reqs.filter(r => r.status === "waiting").length;
+  return '<button class="fab" id="fab" aria-label="Ask Claude">💬 Ask Claude' +
+    (waiting ? '<span class="badge">' + waiting + "</span>" : "") + "</button>" +
+    '<aside class="drawer" id="drawer" aria-label="Ask Claude panel"><div class="dh"><div><h3>Ask Claude</h3>' +
+    '<div class="sub">add a job from QB, fix a rep, correct a number — anything</div></div>' +
+    '<button class="close" id="dclose" aria-label="Close">×</button></div>' +
+    '<div class="msgs" id="msgs">' + (reqs.length ? reqs.map(r =>
+      '<div class="msg q"><div class="who">' + esc(r.by) + " · " + esc((r.ts || "").slice(0,10)) + "</div>" + esc(r.text) +
+      (r.status === "waiting" ? '<div class="pend">waiting for Claude…</div>' : "") + "</div>" +
+      (r.reply ? '<div class="msg a"><div class="who">Claude</div>' + esc(r.reply) + "</div>" : "")
+    ).join("") : '<div class="empty" style="padding:26px 8px">No requests yet. Ask for a job to be added from QuickBooks, a rep change, a correction — Claude reads this box.</div>') + "</div>" +
+    (CAN_WRITE ?
+      '<div class="composer"><div class="row"><select id="rby">' +
+        PEOPLE.map(p => "<option>" + p + "</option>").join("") + "</select></div>" +
+      '<div class="row"><textarea id="rtext" placeholder="e.g. Add the Johnson kitchen job from QB under Barry"></textarea>' +
+      '<button class="send" id="rsend">Send</button></div>' +
+      '<div class="hint">Answered instantly when Claude is running — guaranteed at the next scheduled sync.</div></div>'
+      : '<div class="readonly-note">Read-only view — requests need edit access. Ask Refael, or use the 💬 comment button in the toolbar.</div>') +
+    "</aside>";
+}
+
+/* ---------- self-publish ---------- */
+function assemble(state){
+  const json = JSON.stringify(state).replace(/</g, "\\u003c");
+  return "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">" +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    "<title>Eco Multiplier Board</title>" + FONT_LINKS +
+    "<style>" + CSS_TEXT + "</style></head><body>" +
+    '<div id="app" aria-busy="true"></div><div id="toast" role="status"></div>' +
+    '<script id="state" type="application/json">' + json + "<\/script>" +
+    '<script id="code">' + CODE_TEXT + "<\/script></body></html>";
+}
+async function publishState(mutate, busyMsg){
+  if (BUSY) return;
+  if (!ART){ toast("Read-only view — ask Refael for edit access"); return; }
+  BUSY = true; toast(busyMsg || "Saving…");
+  const next = JSON.parse(JSON.stringify(STATE));
+  mutate(next);
+  try {
+    await ART.publish(assemble(next));
+    /* success: the shell reloads this view to the new version */
+  } catch (e) {
+    BUSY = false;
+    if (e && e.code === "conflict") return;           /* reload incoming */
+    if (e && (e.code === "not_writer" || e.code === "not_granted")){
+      CAN_WRITE = false; render(); mountDrawer();
+      toast("This view is read-only"); return;
+    }
+    toast("Save failed — try again (" + (e && e.code || "error") + ")");
+  }
+}
+
+/* ---------- wiring ---------- */
+function wire(){
+  document.querySelectorAll(".tab").forEach(b =>
+    b.addEventListener("click", () => { TAB = b.dataset.tab; render(); }));
+  document.querySelectorAll(".act").forEach(b => b.addEventListener("click", () => {
+    if (!b.classList.contains("confirm")){
+      const orig = b.textContent;
+      b.classList.add("confirm"); b.textContent = "Sure?";
+      setTimeout(() => { b.classList.remove("confirm"); b.textContent = orig; }, 3500);
+      return;
+    }
+    const id = b.dataset.id, act = b.dataset.act;
+    publishState(s => {
+      const j = s.jobs.find(x => x.id === id); if (!j) return;
+      j.status = act === "close" ? "closed" : "open";
+      if (act === "close") j.closed_on = new Date().toISOString().slice(0,10);
+      else delete j.closed_on;
+      (s.log = s.log || []).push({ts: new Date().toISOString(), action: act, job: j.job});
+    }, act === "close" ? "Closing job…" : "Reopening…");
+  }));
+}
+function mountDrawer(){
+  document.getElementById("drawer-root").innerHTML = drawerHTML();
+  const dr = $("#drawer");
+  $("#fab").addEventListener("click", () => { dr.classList.add("open"); const m = $("#msgs"); m.scrollTop = m.scrollHeight; });
+  $("#dclose").addEventListener("click", () => dr.classList.remove("open"));
+  const send = $("#rsend");
+  if (send) send.addEventListener("click", () => {
+    const text = $("#rtext").value.trim();
+    if (!text) return;
+    publishState(s => {
+      (s.requests = s.requests || []).push({
+        id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+        by: $("#rby").value, text, ts: new Date().toISOString(), status: "waiting", reply: null
+      });
+    }, "Sending to Claude…");
+  });
+  const ta = $("#rtext");
+  if (ta){
+    try { const d = sessionStorage.getItem("eco-draft-text"); if (d) ta.value = d; } catch(e){}
+    ta.addEventListener("input", () => { try { sessionStorage.setItem("eco-draft-text", ta.value); } catch(e){} });
+  }
+}
+
+/* ---------- PIN gate (encrypted public mirror) ---------- */
+async function deriveKey(pin, salt){
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"}, km,
+    {name:"AES-GCM", length:256}, false, ["decrypt"]);
+}
+async function tryDecrypt(pin){
+  if (!(window.crypto && crypto.subtle)) throw {nocrypto: true};
+  const raw = Uint8Array.from(atob(STATE.encrypted), c => c.charCodeAt(0));
+  const salt = raw.slice(0,16), iv = raw.slice(16,28), ct = raw.slice(28);
+  const key = await deriveKey(pin, salt);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function pinGate(){
+  const g = document.createElement("div"); g.id = "gate";
+  g.innerHTML = '<div class="box"><h2>Eco Job Board</h2><p>Enter the access code Refael sent you.</p>' +
+    '<input id="pin" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="......">' +
+    '<button id="go">Unlock</button><div class="err" id="perr"></div></div>';
+  document.body.appendChild(g);
+  const attempt = async () => {
+    const pin = document.getElementById("pin").value.trim();
+    if (!pin) return;
+    try {
+      const st = await tryDecrypt(pin);
+      try { localStorage.setItem("eco-board-pin", pin); } catch(e){}
+      STATE = st; g.remove(); boot();
+    } catch (e) {
+      document.getElementById("perr").textContent = (e && e.nocrypto)
+        ? "This page needs a secure (https) connection to unlock"
+        : "Wrong code - try again";
+      try { localStorage.removeItem("eco-board-pin"); } catch(e){}
+    }
+  };
+  document.getElementById("go").addEventListener("click", attempt);
+  document.getElementById("pin").addEventListener("keydown", e => { if (e.key === "Enter") attempt(); });
+  let saved = null;
+  try { saved = localStorage.getItem("eco-board-pin"); } catch(e){}
+  if (saved){ document.getElementById("pin").value = saved; attempt(); }
+}
+
+/* ---------- boot ---------- */
+function boot(){
+render();
+if (!STATE.readonly){
+  const root = document.createElement("div");
+  root.id = "drawer-root";
+  document.body.appendChild(root);
+  mountDrawer();
+  (window.claude ? claude.use("artifact") : Promise.resolve(null)).then(ns => {
+    ART = ns;
+    if (ns){ CAN_WRITE = true; render(); mountDrawer(); }
+  }).catch(() => {});
+}
+}
+if (STATE.encrypted) pinGate(); else boot();
+</script>
+</body></html>
